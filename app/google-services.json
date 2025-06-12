@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "256199761962",
+    "project_id": "secret-cop",
+    "storage_bucket": "secret-cop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256199761962:android:70db679306ebf7da002353",
+        "android_client_info": {
+          "package_name": "com.rubyproducti9n.secretcop"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "256199761962-2hhsdmrk9ltg8kjsfuqku35gj46p2hle.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rubyproducti9n.secretcop",
+            "certificate_hash": "32147ea70b5cc494b6f0be1bf48f198bbd6b44f1"
+          }
+        },
+        {
+          "client_id": "256199761962-ahm21hune0mfj3e2h5ll9qgafl3u583k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDk2yJmn7d3kqCh9QWSPtShc8Uti99xRXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "256199761962-ahm21hune0mfj3e2h5ll9qgafl3u583k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
