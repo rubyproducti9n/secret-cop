@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private int points = 0;
     private int rewards = 0;
 
-    //Show a dialog box if service is not available in mentioned city yes
+    //Show a dialog box if service is not available in mentioned city yes waw
 
     @SuppressLint("SetTextI18n")
     @Override
