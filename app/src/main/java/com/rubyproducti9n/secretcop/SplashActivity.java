@@ -5,12 +5,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -55,15 +59,48 @@ public class SplashActivity extends BaseActivity {
                 if (ActivityCompat.checkSelfPermission(SplashActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(SplashActivity.this, "Permission required", Toast.LENGTH_SHORT).show();
                     ActivityCompat.requestPermissions(SplashActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            new MaterialAlertDialogBuilder(SplashActivity.this)
+                                    .setTitle("Warning")
+                                    .setMessage("To continue please restart the app.")
+                                    .setPositiveButton("Restart", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            finishAffinity();
+                                        }
+                                    }).setCancelable(false).show();
+                        }
+                    },2000);
+
                     return;
                 }else{
                     new MaterialAlertDialogBuilder(SplashActivity.this)
                             .setTitle("Warning")
-                            .setMessage("Unable to detect location. \n\nTry:")
+                            .setMessage("Unable to detect location. \n\nTry:\n1) Enabling Location in your device settings. \n2) Grant all the permission in app info. \n\nStill not working? Contact Us")
                             .setPositiveButton("Exit App", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    finishAffinity();
+                                    startActivity(new Intent(SplashActivity.this, SplashActivity.class));
+                                    finish();
+                                }
+                            })
+                            .setNegativeButton("Contact Us", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                                    emailIntent.setData(Uri.parse("mailto:")); // Only email apps should handle this
+                                    emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"om.lokhande34@gmail.com"});
+                                    emailIntent.putExtra(Intent.EXTRA_SUBJECT, "App Support Request – Secret Cop");
+                                    emailIntent.putExtra(Intent.EXTRA_TEXT, "Hello Secret Cop Team,\n\nI would like to report an issue / provide feedback regarding the app.\n\nDetails:\n- [Explain your issue here]\n\nRegards,\n[Your Name]");
+
+                                    try {
+                                        startActivity(Intent.createChooser(emailIntent, "Send email via..."));
+                                    } catch (android.content.ActivityNotFoundException ex) {
+                                        Toast.makeText(SplashActivity.this, "No email client installed.", Toast.LENGTH_SHORT).show();
+                                    }
+
                                 }
                             }).setCancelable(false).show();
                 }
@@ -101,8 +138,15 @@ public class SplashActivity extends BaseActivity {
                 String currentCity = addresses.get(0).getLocality();
                 if (currentCity != null && allowedCities.contains(currentCity)) {
                     new Handler().postDelayed(() -> {
-                        context.startActivity(new Intent(context, MainActivity.class));
-                        activity.finish();
+                        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+                        String uid = pref.getString("uid", null);
+                        if (uid!=null){
+                            context.startActivity(new Intent(context, MainActivity.class));
+                            activity.finish();
+                        }else{
+                            context.startActivity(new Intent(context, LoginActivity.class));
+                            activity.finish();
+                        }
                     }, 2000);
                 } else {
                     showExitDialog(activity, "Access Restricted", "This app is not available in your current location.");
@@ -111,7 +155,7 @@ public class SplashActivity extends BaseActivity {
                 showExitDialog(activity, "Location Error", "Unable to determine your city.");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("City Location Error", "Trace: " + e.getMessage());
             showExitDialog(activity, "Location Error", "Failed to fetch location data.");
         }
     }
