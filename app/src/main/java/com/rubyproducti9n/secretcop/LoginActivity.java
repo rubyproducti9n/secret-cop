@@ -54,7 +54,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
     private static final String TAG = "GoogleSignInActivity";
     private static final String PREFS_NAME = "UserSessionPrefs"; // Name for SharedPreferences file
 
@@ -160,6 +160,21 @@ public class LoginActivity extends AppCompatActivity {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             // Google Sign In was successful, authenticate with Firebase
             Log.d(TAG, "Google sign in successful: " + account.getId());
+            String firstName = account.getGivenName();
+            String lastName = account.getFamilyName();
+
+            DatabaseReference userRef = FirebaseDatabase.getInstance()
+                    .getReference("users")
+                    .child(Objects.requireNonNull(account.getId()));
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("first_name", firstName);
+            updates.put("last_name", lastName);
+            userRef.updateChildren(updates)
+                    .addOnSuccessListener(unused -> Log.d("Firebase", "User info saved"))
+                    .addOnFailureListener(e -> Log.e("Firebase", "Failed to save user info", e));
+
+            saveToPreference("first_name", firstName);
+            saveToPreference("last_name", lastName);
             firebaseAuthWithGoogle(account.getIdToken());
             fetchOtherDetails(account.getIdToken(), this, account.getId());
         } catch (ApiException e) {
@@ -181,12 +196,12 @@ public class LoginActivity extends AppCompatActivity {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.e("PeopleAPI", "Error: " + e.getMessage());
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
                     Log.d("PeopleAPI", responseBody);
@@ -242,7 +257,7 @@ public class LoginActivity extends AppCompatActivity {
                                 .addOnFailureListener(e -> Log.e("Firebase", "Failed to save user info", e));
 
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        Log.e("AuthO Error", "Error: " + e.getMessage());
                     }
 
                 } else {
@@ -472,6 +487,8 @@ public class LoginActivity extends AppCompatActivity {
         // Create a User object from your model class
         User newUser = new User(
                 uid,
+                (String) getPreference("first_name", null),
+                (String) getPreference("last_name", null),
                 username,
                 email,
                 phoneNumber,

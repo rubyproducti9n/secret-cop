@@ -45,6 +45,7 @@ public class BaseActivity extends AppCompatActivity {
     protected DatabaseReference couponsRef;
     protected FirebaseUser currentUser;
     public static SharedPreferences pref;
+    public static SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,22 +58,61 @@ public class BaseActivity extends AppCompatActivity {
         }
 
          pref = PreferenceManager.getDefaultSharedPreferences(this);
-
+        editor = pref.edit();
 
     }
 
-    public String getUid(){
+    public static void saveToPreference(String key, Object value){
+        if (value instanceof String) {
+            editor.putString(key, (String) value);
+        } else if (value instanceof Integer) {
+            editor.putInt(key, (Integer) value);
+        } else if (value instanceof Boolean) {
+            editor.putBoolean(key, (Boolean) value);
+        } else if (value instanceof Float) {
+            editor.putFloat(key, (Float) value);
+        } else if (value instanceof Double) {
+            // SharedPreferences doesn't support double directly, so store it as long bits
+            editor.putLong(key, Double.doubleToRawLongBits((Double) value));
+        } else if (value instanceof Long) {
+            editor.putLong(key, (Long) value);
+        } else {
+            throw new IllegalArgumentException("Unsupported value type for SharedPreferences");
+        }
+        editor.apply();
+    }
+    public static Object getPreference(String key, Object defaultValue){
+        if (defaultValue instanceof String) {
+            return pref.getString(key, (String) defaultValue);
+        } else if (defaultValue instanceof Integer) {
+            return pref.getInt(key, (Integer) defaultValue);
+        } else if (defaultValue instanceof Boolean) {
+            return pref.getBoolean(key, (Boolean) defaultValue);
+        } else if (defaultValue instanceof Float) {
+            return pref.getFloat(key, (Float) defaultValue);
+        } else if (defaultValue instanceof Double) {
+            return Double.longBitsToDouble(pref.getLong(key, Double.doubleToRawLongBits((Double) defaultValue)));
+        } else if (defaultValue instanceof Long) {
+            return pref.getLong(key, (Long) defaultValue);
+        } else {
+            throw new IllegalArgumentException("Unsupported default value type for SharedPreferences");
+        }
+    }
+    public static boolean isAdmin(){
+        return getUid() != null && getUserName() != null && getUserName().contains("Om Lokhande") && getUserEmail().equals("om.lokhande34@gmail.com");
+    }
+    public static String getUid(){
         return pref.getString("uid", null);
     }
-    public String getUserName(){
+    public static String getUserName(){
         return pref.getString("displayName", null);
     }
 
-    public String getUserEmail(){
+    public static String getUserEmail(){
         return pref.getString("email", null);
     }
 
-    public String getUserAvatar(){
+    public static String getUserAvatar(){
         return pref.getString("photoUrl", null);
     }
 
