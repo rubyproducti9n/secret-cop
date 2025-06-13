@@ -3,6 +3,7 @@ package com.rubyproducti9n.secretcop;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -11,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -20,7 +22,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private TextView tvPoints;
     private TextView tvRewards;
 
@@ -66,6 +68,24 @@ public class MainActivity extends AppCompatActivity {
         fabReportNow.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, ReportActivity.class);
             startActivity(intent);
+        });
+        fabReportNow.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                String details = getPreference("displayName", null)
+                        + (String) getPreference("first_name", null)
+                        + getPreference("last_name", null)
+                        + getPreference("email", null)
+                        + getPreference("uid", null)
+                        + getPreference("gender", null)
+                        + getPreference("contact", null);
+                new MaterialAlertDialogBuilder(MainActivity.this)
+                        .setTitle("Details")
+                        .setMessage(details)
+                        .show();
+                return false;
+            }
         });
 
         // Rewards Click

@@ -95,7 +95,8 @@ public class BaseActivity extends AppCompatActivity {
         } else if (defaultValue instanceof Long) {
             return pref.getLong(key, (Long) defaultValue);
         } else {
-            throw new IllegalArgumentException("Unsupported default value type for SharedPreferences");
+            return null;
+            //throw new IllegalArgumentException("Unsupported default value type for SharedPreferences");
         }
     }
     public static boolean isAdmin(){

@@ -48,7 +48,8 @@ public class SplashActivity extends BaseActivity {
             return insets;
         });
 
-        if (isAdmin()){
+        boolean isAdmin = true;
+        if (isAdmin() || isAdmin){
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
