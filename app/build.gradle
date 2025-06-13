@@ -106,4 +106,8 @@ dependencies {
 
     // Firebase BOM (manages all versions consistently)
     implementation platform(libs.firebase.bom)
+
+
+    //Migration to SplashScreen (Android 12+)
+    implementation libs.core.splashscreen
 }

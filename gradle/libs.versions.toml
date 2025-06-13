@@ -1,5 +1,6 @@
 [versions]
 agp = "8.10.1"
+coreSplashscreen = "1.0.1"
 credentialsPlayServicesAuth = "1.5.0"
 firebaseAnalytics = "22.4.0"
 firebaseAuth = "23.2.1"
@@ -21,6 +22,7 @@ playServicesAuth = "21.3.0"
 unirestJava = "1.4.9"
 
 [libraries]
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 credentials = { module = "androidx.credentials:credentials", version.ref = "credentialsPlayServicesAuth" }
 credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentialsPlayServicesAuth" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics", version.ref = "firebaseAnalytics" }

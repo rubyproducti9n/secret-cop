@@ -1,12 +1,25 @@
 package com.rubyproducti9n.secretcop;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -17,7 +30,11 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class BaseActivity extends AppCompatActivity {
@@ -26,16 +43,77 @@ public class BaseActivity extends AppCompatActivity {
     protected DatabaseReference couponsRef;
     protected FirebaseUser currentUser;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dbRef = FirebaseDatabase.getInstance().getReference();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
         if (currentUser != null) {
             usersRef = dbRef.child("users").child(currentUser.getUid());
             couponsRef = dbRef.child("coupons");
         }
+    }
+    public static void getCurrentLocation(Context context, Activity activity, OnLocationResult callback) {
+        FusedLocationProviderClient locationClient = LocationServices.getFusedLocationProviderClient(context);
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 101);
+            callback.onLocationError("Location permission not granted.");
+            return;
+        }
+
+        locationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+                callback.onLocationReceived(location);
+            } else {
+                callback.onLocationError("Unable to fetch location.");
+            }
+        }).addOnFailureListener(e -> {
+            callback.onLocationError("Error fetching location: " + e.getMessage());
+        });
+    }
+
+    public static void checkCity(Context context, Activity activity, Location location) {
+        List<String> allowedCities = Arrays.asList("Mumbai", "Pune", "Hyderabad");
+        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+
+        try {
+            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                String currentCity = addresses.get(0).getLocality();
+                if (currentCity != null && allowedCities.contains(currentCity)) {
+                    new Handler().postDelayed(() -> {
+                        context.startActivity(new Intent(context, MainActivity.class));
+                        activity.finish();
+                    }, 2000);
+                } else {
+                    showExitDialog(activity, "Access Restricted", "This app is not available in your current location.");
+                }
+            } else {
+                showExitDialog(activity, "Location Error", "Unable to determine your city.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showExitDialog(activity, "Location Error", "Failed to fetch location data.");
+        }
+    }
+
+    private static void showExitDialog(Activity activity, String title, String message) {
+        new AlertDialog.Builder(activity)
+                .setTitle(title)
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton("Exit App", (dialog, which) -> {
+                    activity.finishAffinity();
+                    System.exit(0);
+                }).show();
+    }
+
+    // Interface to handle async location result
+    public interface OnLocationResult {
+        void onLocationReceived(Location location);
+        void onLocationError(String errorMsg);
     }
 
     // 📌 Registers a new user with basic details in the "users" node
