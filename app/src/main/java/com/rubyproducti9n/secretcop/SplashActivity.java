@@ -49,6 +49,10 @@ public class SplashActivity extends BaseActivity {
         });
 
         boolean isAdmin = true;
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        String uid = pref.getString("uid", null);
+        String name = pref.getString("displayName")
+
         if (isAdmin){
             new Handler().postDelayed(new Runnable() {
                 @Override

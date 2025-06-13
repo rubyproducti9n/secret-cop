@@ -4,12 +4,14 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -42,7 +44,7 @@ public class BaseActivity extends AppCompatActivity {
     protected DatabaseReference usersRef;
     protected DatabaseReference couponsRef;
     protected FirebaseUser currentUser;
-
+    public static SharedPreferences pref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +55,28 @@ public class BaseActivity extends AppCompatActivity {
             usersRef = dbRef.child("users").child(currentUser.getUid());
             couponsRef = dbRef.child("coupons");
         }
+
+         pref = PreferenceManager.getDefaultSharedPreferences(this);
+
+
     }
+
+    public String getUid(){
+        return pref.getString("uid", null);
+    }
+    public String getUserName(){
+        return pref.getString("displayName", null);
+    }
+
+    public String getUserEmail(){
+        return pref.getString("email", null);
+    }
+
+    public String getUserAvatar(){
+        return pref.getString("photoUrl", null);
+    }
+
+
     public static void getCurrentLocation(Context context, Activity activity, OnLocationResult callback) {
         FusedLocationProviderClient locationClient = LocationServices.getFusedLocationProviderClient(context);
 

@@ -1,6 +1,7 @@
 package com.rubyproducti9n.secretcop;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -27,6 +28,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.firebase.auth.AuthCredential;
@@ -36,7 +38,21 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "GoogleSignInActivity";
@@ -86,6 +102,12 @@ public class LoginActivity extends AppCompatActivity {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id)) // Crucial for Firebase Auth
                 .requestEmail()
+                .requestScopes(
+                        new Scope("https://www.googleapis.com/auth/user.addresses.read"),
+                        new Scope("https://www.googleapis.com/auth/user.birthday.read"),
+                        new Scope("https://www.googleapis.com/auth/user.phonenumbers.read"),
+                        new Scope("https://www.googleapis.com/auth/user.gender.read")
+                )
                 .build();
 
         // Build a GoogleSignInClient with the options specified by gso.
@@ -139,6 +161,7 @@ public class LoginActivity extends AppCompatActivity {
             // Google Sign In was successful, authenticate with Firebase
             Log.d(TAG, "Google sign in successful: " + account.getId());
             firebaseAuthWithGoogle(account.getIdToken());
+            fetchOtherDetails(account.getIdToken(), this, account.getId());
         } catch (ApiException e) {
             // Google Sign In failed, update UI accordingly
             Log.w(TAG, "Google sign in failed", e);
@@ -147,6 +170,88 @@ public class LoginActivity extends AppCompatActivity {
             hideProgressBar();
         }
     }
+
+    private void fetchOtherDetails(String idToken, Context context, String userId) {
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url("https://people.googleapis.com/v1/people/me?personFields=birthdays,genders,phoneNumbers")
+                .addHeader("Authorization", "Bearer " + idToken)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("PeopleAPI", "Error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    Log.d("PeopleAPI", responseBody);
+
+                    try {
+                        JSONObject jsonObject = new JSONObject(responseBody);
+
+                        // Get birthday
+                        String birthday = "";
+                        JSONArray birthdays = jsonObject.optJSONArray("birthdays");
+                        if (birthdays != null && birthdays.length() > 0) {
+                            JSONObject date = birthdays.getJSONObject(0).getJSONObject("date");
+                            int day = date.optInt("day");
+                            int month = date.optInt("month");
+                            int year = date.optInt("year");
+                            birthday = day + "/" + month + "/" + year;
+                        }
+
+                        // Get gender
+                        String gender = "";
+                        JSONArray genders = jsonObject.optJSONArray("genders");
+                        if (genders != null && genders.length() > 0) {
+                            gender = genders.getJSONObject(0).optString("value");
+                        }
+
+                        // Get phone number
+                        String phoneNumber = "";
+                        JSONArray phones = jsonObject.optJSONArray("phoneNumbers");
+                        if (phones != null && phones.length() > 0) {
+                            phoneNumber = phones.getJSONObject(0).optString("value");
+                        }
+
+                        // Save to SharedPreferences
+                        SharedPreferences prefs = context.getSharedPreferences("user_info", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString("birthday", birthday);
+                        editor.putString("gender", gender);
+                        editor.putString("phone", phoneNumber);
+                        editor.apply();
+
+                        // Save to Firebase
+                        DatabaseReference userRef = FirebaseDatabase.getInstance()
+                                .getReference("users")
+                                .child(userId);
+
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("birthday", birthday);
+                        updates.put("gender", gender);
+                        updates.put("phone", phoneNumber);
+
+                        userRef.updateChildren(updates)
+                                .addOnSuccessListener(unused -> Log.d("Firebase", "User info saved"))
+                                .addOnFailureListener(e -> Log.e("Firebase", "Failed to save user info", e));
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
+                    Log.e("PeopleAPI", "Failed: " + response.code());
+                }
+            }
+        });
+    }
+
 
     /**
      * Displays a Material AlertDialog to confirm user details before saving and proceeding.
