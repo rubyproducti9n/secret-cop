@@ -17,7 +17,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -235,9 +234,9 @@ public class LoginActivity extends BaseActivity {
                         }
 
                         // Save to SharedPreferences
-                        saveToPreference("gender", gender != null ? gender : "unknown");
-                        saveToPreference("birthday", birthday != null ? birthday : "unknown");
-                        saveToPreference("phone", phoneNumber != null ? phoneNumber : "unknown");
+                        saveToPreference("gender", gender);
+                        saveToPreference("birthday", birthday);
+                        saveToPreference("phone", phoneNumber);
 
                         // Save to Firebase
                         DatabaseReference userRef = FirebaseDatabase.getInstance()
@@ -414,12 +413,11 @@ public class LoginActivity extends BaseActivity {
 
         // Get phone number from provider data (Google sign-in itself doesn't provide phone directly)
         String phoneNumber = null;
-        if (user.getProviderData() != null) {
-            for (UserInfo profile : user.getProviderData()) {
-                if (profile.getPhoneNumber() != null && !profile.getPhoneNumber().isEmpty()) {
-                    phoneNumber = profile.getPhoneNumber();
-                    break; // Found a phone number, take the first one
-                }
+        user.getProviderData();
+        for (UserInfo profile : user.getProviderData()) {
+            if (profile.getPhoneNumber() != null && !profile.getPhoneNumber().isEmpty()) {
+                phoneNumber = profile.getPhoneNumber();
+                break; // Found a phone number, take the first one
             }
         }
         editor.putString("phoneNumber", phoneNumber);
@@ -466,18 +464,18 @@ public class LoginActivity extends BaseActivity {
 
         // Determine the primary sign-in provider (e.g., "google.com", "password", "phone")
         String providerId = null;
-        if (user.getProviderData() != null && !user.getProviderData().isEmpty()) {
+        user.getProviderData();
+        if (!user.getProviderData().isEmpty()) {
             providerId = user.getProviderData().get(0).getProviderId(); // Get the primary provider
         }
 
         // Try to get phone number from provider data (Google sign-in doesn't provide phone directly)
         String phoneNumber = null;
-        if (user.getProviderData() != null) {
-            for (UserInfo profile : user.getProviderData()) {
-                if (profile.getPhoneNumber() != null && !profile.getPhoneNumber().isEmpty()) {
-                    phoneNumber = profile.getPhoneNumber();
-                    break; // Found a phone number, take the first one
-                }
+        user.getProviderData();
+        for (UserInfo profile : user.getProviderData()) {
+            if (profile.getPhoneNumber() != null && !profile.getPhoneNumber().isEmpty()) {
+                phoneNumber = profile.getPhoneNumber();
+                break; // Found a phone number, take the first one
             }
         }
 
