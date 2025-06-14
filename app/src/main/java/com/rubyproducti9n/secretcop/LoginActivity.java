@@ -235,12 +235,9 @@ public class LoginActivity extends BaseActivity {
                         }
 
                         // Save to SharedPreferences
-                        SharedPreferences prefs = context.getSharedPreferences("user_info", Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putString("birthday", birthday);
-                        editor.putString("gender", gender);
-                        editor.putString("phone", phoneNumber);
-                        editor.apply();
+                        saveToPreference("gender", gender != null ? gender : "unknown");
+                        saveToPreference("birthday", birthday != null ? birthday : "unknown");
+                        saveToPreference("phone", phoneNumber != null ? phoneNumber : "unknown");
 
                         // Save to Firebase
                         DatabaseReference userRef = FirebaseDatabase.getInstance()
@@ -256,6 +253,7 @@ public class LoginActivity extends BaseActivity {
                                 .addOnSuccessListener(unused -> Log.d("Firebase", "User info saved"))
                                 .addOnFailureListener(e -> Log.e("Firebase", "Failed to save user info", e));
 
+                        saveUserDetailsToDatabase(FirebaseAuth.getInstance().getCurrentUser());
                     } catch (JSONException e) {
                         Log.e("AuthO Error", "Error: " + e.getMessage());
                     }
@@ -363,7 +361,6 @@ public class LoginActivity extends BaseActivity {
                         if (user != null) {
 
                             saveUserDetailsToSharedPreferences(user);
-                            saveUserDetailsToDatabase(user);
                             redirectToHomeActivity();
 //                            showUserDetailsConfirmation(user); // Show confirmation dialog
                         }
@@ -495,7 +492,10 @@ public class LoginActivity extends BaseActivity {
                 photoUrl != null ? photoUrl.toString() : null,
                 createdAt,
                 lastLoginAt,
-                providerId
+                providerId,
+                (String) getPreference("gender", null),
+                (String) getPreference("birthday", null),
+                (String) getPreference("phone", null)
         );
 
         // Push the user object to the "users" node in Realtime Database under their UID

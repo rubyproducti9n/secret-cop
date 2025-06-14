@@ -15,12 +15,15 @@ public class User {
     public Long createdAt; // Timestamp in milliseconds
     public Long lastLoginAt; // Timestamp in milliseconds
     public String providerId; // e.g., "google.com", "password"
+    public String gender;
+    public String birthday;
+    public String phone;
 
     public User() {
         // Default constructor required for calls to DataSnapshot.getValue(User.class)
     }
 
-    public User(String uid, String firstName, String lastName, String username, String email, String phoneNumber, String profileImageUrl, Long createdAt, Long lastLoginAt, String providerId) {
+    public User(String uid, String firstName, String lastName, String username, String email, String phoneNumber, String profileImageUrl, Long createdAt, Long lastLoginAt, String providerId, String gender, String birthday, String phone) {
         this.uid = uid;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -31,6 +34,9 @@ public class User {
         this.createdAt = createdAt;
         this.lastLoginAt = lastLoginAt;
         this.providerId = providerId;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.phone = phone;
     }
 
     // Public getters are required by Firebase Realtime Database for reading data back
@@ -112,5 +118,29 @@ public class User {
 
     public String getProviderId() {
         return providerId;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }
